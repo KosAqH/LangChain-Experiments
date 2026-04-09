@@ -159,8 +159,8 @@ def format_context(docs: list[Document]) -> str:
 	return "\n\n".join(lines)
 
 
-def extract_cited_sources(answer: str, docs: list[Document]) -> list[tuple[str, str]]:
-	"""Return unique cited sources and their URLs for [n] references in the answer."""
+def extract_cited_sources(answer: str, docs: list[Document]) -> list[tuple[int, str, str]]:
+	"""Return unique cited [n] references with source path and URL."""
 	if not docs:
 		return []
 
@@ -171,15 +171,16 @@ def extract_cited_sources(answer: str, docs: list[Document]) -> list[tuple[str, 
 		if 1 <= int(match) <= max_index
 	]
 
-	sources: list[tuple[str, str]] = []
-	seen: set[str] = set()
+	sources: list[tuple[int, str, str]] = []
+	seen_indices: set[int] = set()
 	for idx in cited_indices:
+		if idx in seen_indices:
+			continue
+		seen_indices.add(idx)
 		doc = docs[idx - 1]
 		source = str(doc.metadata.get("source", "unknown"))
 		url = str(doc.metadata.get("url", ""))
-		if source not in seen:
-			seen.add(source)
-			sources.append((source, url))
+		sources.append((idx, source, url))
 	return sources
 
 
@@ -241,11 +242,11 @@ def main() -> None:
 		print(f"\nAnswer:\n{answer}")
 		if sources:
 			print("\nSources cited in answer:")
-			for i, (source, url) in enumerate(sources, start=1):
+			for idx, source, url in sources:
 				if url:
-					print(f"  [{i}] {source} -> {url}")
+					print(f"  [{idx}] {source} -> {url}")
 				else:
-					print(f"  [{i}] {source}")
+					print(f"  [{idx}] {source}")
 
 
 if __name__ == "__main__":
