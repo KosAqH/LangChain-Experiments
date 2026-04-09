@@ -1,6 +1,3 @@
-from __future__ import annotations
-
-import importlib
 import os
 import re
 from pathlib import Path
@@ -11,6 +8,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.retrievers import BaseRetriever
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import ChatOpenAI
+from langchain_community.vectorstores import FAISS
+from langchain_huggingface import HuggingFaceEmbeddings
 from dotenv import load_dotenv
 
 
@@ -19,8 +18,16 @@ DOCS_DIR = BASE_DIR / "data" / "python-3.14-docs-text"
 VECTORSTORE_DIR = BASE_DIR / "data" / "faiss_python_docs"
 DOCS_BASE_URL = "https://docs.python.org/3.14"
 
+CHUNK_SIZE = 800
+CHUNK_OVERLAP = 120
+SCORE_BOOST_MODULE_MATCH = 6.0
+SCORE_BOOST_SOURCE_MATCH = 2.0
+SCORE_BOOST_CONTENT_MATCH = 1.0
 
 load_dotenv(dotenv_path=BASE_DIR / ".env")
+
+
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
 
 
 def load_python_docs(docs_dir: Path) -> list[Document]:
@@ -44,21 +51,13 @@ def load_python_docs(docs_dir: Path) -> list[Document]:
 
 def build_dense_retriever(docs: list[Document]) -> BaseRetriever:
 	splitter = RecursiveCharacterTextSplitter(
-		chunk_size=800,
-		chunk_overlap=120,
+		chunk_size=CHUNK_SIZE,
+		chunk_overlap=CHUNK_OVERLAP,
 		separators=["\n\n", "\n", ". ", " ", ""],
 	)
-	faiss_mod = importlib.import_module("langchain_community.vectorstores")
-	hf_mod = importlib.import_module("langchain_huggingface")
-	FAISS = getattr(faiss_mod, "FAISS")
-	HuggingFaceEmbeddings = getattr(hf_mod, "HuggingFaceEmbeddings")
 
-	embedding_model = os.getenv(
-		"EMBEDDING_MODEL",
-		"sentence-transformers/all-MiniLM-L6-v2",
-	)
 	embeddings = HuggingFaceEmbeddings(
-		model_name=embedding_model,
+		model_name=EMBEDDING_MODEL,
 		encode_kwargs={"normalize_embeddings": True},
 	)
 
@@ -70,9 +69,7 @@ def build_dense_retriever(docs: list[Document]) -> BaseRetriever:
 				embeddings,
 				allow_dangerous_deserialization=True,
 			)
-			print(f"Loaded persisted vector store from: {VECTORSTORE_DIR}")
-			print(f"Dense retrieval enabled with model: {embedding_model}")
-			return vector_store.as_retriever(search_kwargs={"k": 40})
+			return vector_store.as_retriever(search_kwargs={"k": 20})
 		except Exception as exc:
 			print(f"Failed to load persisted vector store, rebuilding: {exc}")
 
@@ -80,9 +77,7 @@ def build_dense_retriever(docs: list[Document]) -> BaseRetriever:
 	vector_store = FAISS.from_documents(chunks, embeddings)
 	VECTORSTORE_DIR.mkdir(parents=True, exist_ok=True)
 	vector_store.save_local(str(VECTORSTORE_DIR))
-	print(f"Persisted vector store saved to: {VECTORSTORE_DIR}")
-	print(f"Dense retrieval enabled with model: {embedding_model}")
-	return vector_store.as_retriever(search_kwargs={"k": 40})
+	return vector_store.as_retriever(search_kwargs={"k": 20})
 
 
 def _tokenize(text: str) -> set[str]:
@@ -128,12 +123,12 @@ def retrieve_relevant_docs(
 		source_boost = 0.0
 		for term in focus:
 			if f"library/{term}.txt" in source:
-				source_boost += 6.0
+				source_boost += SCORE_BOOST_MODULE_MATCH
 			elif term in source:
-				source_boost += 2.0
+				source_boost += SCORE_BOOST_SOURCE_MATCH
 
 		# Small bonus when focus terms are explicitly mentioned in content.
-		content_boost = sum(1.0 for term in focus if term in content)
+		content_boost = sum(SCORE_BOOST_CONTENT_MATCH for term in focus if term in content)
 
 		# Penalize broad table-of-contents style pages that frequently dominate BM25.
 		source_penalty = 1.0 if source.endswith("index.txt") or source == "contents.txt" else 0.0
