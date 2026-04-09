@@ -16,7 +16,7 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent
 DOCS_DIR = BASE_DIR / "data" / "python-3.14-docs-text"
-VECTORSTORE_DIR = BASE_DIR / "storage" / "faiss_python_docs"
+VECTORSTORE_DIR = BASE_DIR / "data" / "faiss_python_docs"
 DOCS_BASE_URL = "https://docs.python.org/3.14"
 
 
