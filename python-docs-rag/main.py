@@ -144,7 +144,7 @@ def retrieve_relevant_docs(
 	reranked = sorted(candidates, key=score, reverse=True)
 	print(f"Retrieved {len(candidates)} dense candidates, reranked top 8:")
 	for i, doc in enumerate(reranked[:8], start=1):
-		print(f"  [{i}] {doc.metadata.get('source', 'unknown')}")
+		print(f"  [{i}] {doc.metadata.get('source', 'unknown')}, {score(doc)}, {doc.page_content[:100].replace(chr(10), ' ')}...")
 	return reranked[:8]
 
 
@@ -159,8 +159,8 @@ def format_context(docs: list[Document]) -> str:
 	return "\n\n".join(lines)
 
 
-def extract_cited_sources(answer: str, docs: list[Document]) -> list[tuple[int, str, str]]:
-	"""Return unique cited [n] references with source path and URL."""
+def extract_cited_sources(answer: str, docs: list[Document]) -> list[tuple[list[int], str, str]]:
+	"""Return cited sources grouped by (source, url) with merged [n] indices."""
 	if not docs:
 		return []
 
@@ -171,7 +171,8 @@ def extract_cited_sources(answer: str, docs: list[Document]) -> list[tuple[int, 
 		if 1 <= int(match) <= max_index
 	]
 
-	sources: list[tuple[int, str, str]] = []
+	grouped: dict[tuple[str, str], list[int]] = {}
+	order: list[tuple[str, str]] = []
 	seen_indices: set[int] = set()
 	for idx in cited_indices:
 		if idx in seen_indices:
@@ -180,8 +181,13 @@ def extract_cited_sources(answer: str, docs: list[Document]) -> list[tuple[int, 
 		doc = docs[idx - 1]
 		source = str(doc.metadata.get("source", "unknown"))
 		url = str(doc.metadata.get("url", ""))
-		sources.append((idx, source, url))
-	return sources
+		key = (source, url)
+		if key not in grouped:
+			grouped[key] = []
+			order.append(key)
+		grouped[key].append(idx)
+
+	return [(grouped[key], key[0], key[1]) for key in order]
 
 
 def build_chain():
@@ -242,11 +248,12 @@ def main() -> None:
 		print(f"\nAnswer:\n{answer}")
 		if sources:
 			print("\nSources cited in answer:")
-			for idx, source, url in sources:
+			for indices, source, url in sources:
+				index_label = ",".join(str(idx) for idx in indices)
 				if url:
-					print(f"  [{idx}] {source} -> {url}")
+					print(f"  [{index_label}] {source} -> {url}")
 				else:
-					print(f"  [{idx}] {source}")
+					print(f"  [{index_label}] {source}")
 
 
 if __name__ == "__main__":
