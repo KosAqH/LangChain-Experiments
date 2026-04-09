@@ -15,7 +15,9 @@ from dotenv import load_dotenv
 
 
 BASE_DIR = Path(__file__).parent
-DOCS_DIR = BASE_DIR / "data" / "python-3.14-docs-text — kopia"
+DOCS_DIR = BASE_DIR / "data" / "python-3.14-docs-text"
+VECTORSTORE_DIR = BASE_DIR / "storage" / "faiss_python_docs"
+DOCS_BASE_URL = "https://docs.python.org/3.14"
 
 
 load_dotenv(dotenv_path=BASE_DIR / ".env")
@@ -25,13 +27,16 @@ def load_python_docs(docs_dir: Path) -> list[Document]:
 	"""Load all .txt docs into LangChain Document objects."""
 	docs: list[Document] = []
 	for path in docs_dir.rglob("*.txt"):
+		rel_path = path.relative_to(docs_dir)
+		source = str(rel_path).replace("\\", "/")
+		url = f"{DOCS_BASE_URL}/{source[:-4]}.html"
 		text = path.read_text(encoding="utf-8", errors="ignore").strip()
 		if not text:
 			continue
 		docs.append(
 			Document(
 				page_content=text,
-				metadata={"source": str(path.relative_to(docs_dir))},
+				metadata={"source": source, "url": url},
 			)
 		)
 	return docs
@@ -43,7 +48,6 @@ def build_dense_retriever(docs: list[Document]) -> BaseRetriever:
 		chunk_overlap=120,
 		separators=["\n\n", "\n", ". ", " ", ""],
 	)
-	chunks = splitter.split_documents(docs)
 	faiss_mod = importlib.import_module("langchain_community.vectorstores")
 	hf_mod = importlib.import_module("langchain_huggingface")
 	FAISS = getattr(faiss_mod, "FAISS")
@@ -57,7 +61,26 @@ def build_dense_retriever(docs: list[Document]) -> BaseRetriever:
 		model_name=embedding_model,
 		encode_kwargs={"normalize_embeddings": True},
 	)
+
+	rebuild_index = os.getenv("REBUILD_VECTORSTORE", "0") == "1"
+	if not rebuild_index and VECTORSTORE_DIR.exists():
+		try:
+			vector_store = FAISS.load_local(
+				str(VECTORSTORE_DIR),
+				embeddings,
+				allow_dangerous_deserialization=True,
+			)
+			print(f"Loaded persisted vector store from: {VECTORSTORE_DIR}")
+			print(f"Dense retrieval enabled with model: {embedding_model}")
+			return vector_store.as_retriever(search_kwargs={"k": 40})
+		except Exception as exc:
+			print(f"Failed to load persisted vector store, rebuilding: {exc}")
+
+	chunks = splitter.split_documents(docs)
 	vector_store = FAISS.from_documents(chunks, embeddings)
+	VECTORSTORE_DIR.mkdir(parents=True, exist_ok=True)
+	vector_store.save_local(str(VECTORSTORE_DIR))
+	print(f"Persisted vector store saved to: {VECTORSTORE_DIR}")
 	print(f"Dense retrieval enabled with model: {embedding_model}")
 	return vector_store.as_retriever(search_kwargs={"k": 40})
 
@@ -136,8 +159,8 @@ def format_context(docs: list[Document]) -> str:
 	return "\n\n".join(lines)
 
 
-def extract_cited_sources(answer: str, docs: list[Document]) -> list[str]:
-	"""Return unique source paths that are explicitly cited as [n] in the answer."""
+def extract_cited_sources(answer: str, docs: list[Document]) -> list[tuple[str, str]]:
+	"""Return unique cited sources and their URLs for [n] references in the answer."""
 	if not docs:
 		return []
 
@@ -148,14 +171,15 @@ def extract_cited_sources(answer: str, docs: list[Document]) -> list[str]:
 		if 1 <= int(match) <= max_index
 	]
 
-	sources: list[str] = []
+	sources: list[tuple[str, str]] = []
 	seen: set[str] = set()
 	for idx in cited_indices:
 		doc = docs[idx - 1]
 		source = str(doc.metadata.get("source", "unknown"))
+		url = str(doc.metadata.get("url", ""))
 		if source not in seen:
 			seen.add(source)
-			sources.append(source)
+			sources.append((source, url))
 	return sources
 
 
@@ -217,8 +241,11 @@ def main() -> None:
 		print(f"\nAnswer:\n{answer}")
 		if sources:
 			print("\nSources cited in answer:")
-			for i, source in enumerate(sources, start=1):
-				print(f"  [{i}] {source}")
+			for i, (source, url) in enumerate(sources, start=1):
+				if url:
+					print(f"  [{i}] {source} -> {url}")
+				else:
+					print(f"  [{i}] {source}")
 
 
 if __name__ == "__main__":
