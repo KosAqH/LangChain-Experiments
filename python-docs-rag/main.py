@@ -9,14 +9,13 @@ from langchain_core.documents import Document
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.retrievers import BaseRetriever
-from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
 
 
 BASE_DIR = Path(__file__).parent
-DOCS_DIR = BASE_DIR / "data" / "python-3.14-docs-text"
+DOCS_DIR = BASE_DIR / "data" / "python-3.14-docs-text — kopia"
 
 
 load_dotenv(dotenv_path=BASE_DIR / ".env")
@@ -137,7 +136,30 @@ def format_context(docs: list[Document]) -> str:
 	return "\n\n".join(lines)
 
 
-def build_chain(dense_retriever: BaseRetriever):
+def extract_cited_sources(answer: str, docs: list[Document]) -> list[str]:
+	"""Return unique source paths that are explicitly cited as [n] in the answer."""
+	if not docs:
+		return []
+
+	max_index = len(docs)
+	cited_indices = [
+		int(match)
+		for match in re.findall(r"\[(\d+)\]", answer)
+		if 1 <= int(match) <= max_index
+	]
+
+	sources: list[str] = []
+	seen: set[str] = set()
+	for idx in cited_indices:
+		doc = docs[idx - 1]
+		source = str(doc.metadata.get("source", "unknown"))
+		if source not in seen:
+			seen.add(source)
+			sources.append(source)
+	return sources
+
+
+def build_chain():
 	model_name = os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini")
 	llm = ChatOpenAI(
 		model=model_name,
@@ -153,6 +175,7 @@ Use ONLY the provided context from local Python documentation to answer.
 Assume, that the question is about Python 3.14 unless specified otherwise.
 If you can't find the answer, say you don't know.
 Always include source references like [1] - faq/programming, [2] - library/argparse.
+Only cite sources that directly support your answer.
 
 Question:
 {question}
@@ -162,15 +185,7 @@ Context:
 """.strip()
 	)
 
-	chain = (
-		{
-			"context": RunnableLambda(lambda q: retrieve_relevant_docs(q, dense_retriever)) | format_context,
-			"question": RunnablePassthrough(),
-		}
-		| prompt
-		| llm
-		| StrOutputParser()
-	)
+	chain = prompt | llm | StrOutputParser()
 	return chain
 
 
@@ -186,7 +201,7 @@ def main() -> None:
 		raise RuntimeError(f"No .txt documents loaded from: {DOCS_DIR}")
 
 	dense_retriever = build_dense_retriever(docs)
-	chain = build_chain(dense_retriever)
+	chain = build_chain()
 
 	print("Python Docs RAG is ready. Type 'exit' to quit.")
 	while True:
@@ -195,8 +210,15 @@ def main() -> None:
 			print("Bye.")
 			break
 
-		answer = chain.invoke(question)
+		retrieved_docs = retrieve_relevant_docs(question, dense_retriever)
+		context = format_context(retrieved_docs)
+		answer = chain.invoke({"question": question, "context": context})
+		sources = extract_cited_sources(answer, retrieved_docs)
 		print(f"\nAnswer:\n{answer}")
+		if sources:
+			print("\nSources cited in answer:")
+			for i, source in enumerate(sources, start=1):
+				print(f"  [{i}] {source}")
 
 
 if __name__ == "__main__":
