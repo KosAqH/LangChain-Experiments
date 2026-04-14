@@ -10,3 +10,8 @@ dependencies = [
     "langchain-openrouter>=0.2.1",
     "tavily-python>=0.7.23",
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.10",
+]

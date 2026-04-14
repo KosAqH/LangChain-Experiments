@@ -1,5 +1,3 @@
-from urllib import response
-
 import dotenv
 import json
 import os
@@ -17,24 +15,30 @@ tavily_client = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
 # Get the directory where this script is located
 SCRIPT_DIR = Path(__file__).parent
 
+
 def sanitize_filename(name: str) -> str:
-    RESTRICTED_CHARS = ['<', '>', ':', '"', '/', '\\', '|', '?', '*']
+    RESTRICTED_CHARS = ["<", ">", ":", '"', "/", "\\", "|", "?", "*"]
     for char in RESTRICTED_CHARS:
-        name = name.replace(char, '')
+        name = name.replace(char, "")
     return name
 
+
 def save_markdown(content: str, query: str) -> None:
-    safe_query = sanitize_filename(query[:20].replace(' ', '_'))
+    safe_query = sanitize_filename(query[:20].replace(" ", "_"))
     filename = SCRIPT_DIR / "reports" / f"{int(time.time())}_{safe_query}.md"
     with open(filename, "w", encoding="utf-8") as f:
         f.write(content)
     print(f"Report saved to {filename}")
 
+
 def log_search(query: str, data: dict) -> None:
-    safe_query = sanitize_filename(query[:20].replace(' ', '_'))
-    filename = SCRIPT_DIR / "logs" / "raw_searches" / f"{int(time.time())}_{safe_query}.json"
+    safe_query = sanitize_filename(query[:20].replace(" ", "_"))
+    filename = (
+        SCRIPT_DIR / "logs" / "raw_searches" / f"{int(time.time())}_{safe_query}.json"
+    )
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
+
 
 def internet_search(
     query: str,
@@ -51,6 +55,7 @@ def internet_search(
     )
     log_search(query, tavily_response)
     return tavily_response["results"]
+
 
 RESEARCH_INSTRUCTIONS = """You are a professionalFact-Checker. 
 Your goal is to verify the accuracy of the user's input.
@@ -89,7 +94,7 @@ if __name__ == "__main__":
         user_input = input("Enter a query (or 'quit' to exit): ")
         if user_input.lower() == "quit":
             break
-        
+
         result = agent.invoke({"messages": [{"role": "user", "content": user_input}]})
 
         final_content = result["messages"][-1].content
