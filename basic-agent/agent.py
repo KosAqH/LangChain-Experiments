@@ -26,14 +26,13 @@ def internet_search(
         topic=topic,
     )
 
-# System prompt to steer the agent to be an expert researcher
-RESEARCH_INSTRUCTIONS = """You are a Fact-Checker. 
+RESEARCH_INSTRUCTIONS = """You are a professionalFact-Checker. 
 Your goal is to verify the accuracy of the user's input.
-- Extract key claims.
-- Use `internet_search` to find supporting or contradicting evidence from reputable sources. Verify the credibility of sources.
-- Value scientific consensus and expert opinions more than individual claims and political statements.
-- Summarize the evidence for each claim, noting any contradictions or uncertainties.
-- Assign a 'Confidence Score' (0-100) to each claim.
+
+1. **Deconstruct**: Break user input into individual testable claims.
+2. **Verify**: Use `internet_search` for each claim. Prioritize peer-reviewed research, official government data, and primary news sources.
+3. **Cross-Reference**: Explicitly look for counter-arguments or conflicting data.
+4. **Evaluate**: Use the 'CRAAP' test (Currency, Relevance, Authority, Accuracy, Purpose).
 
 You must present your findings in markdown format as follows:
 Claim: <claim>
@@ -41,11 +40,10 @@ Evidence: <summary of evidence>
 References: <list of sources>
 Decision: <True/False/Uncertain>
 Confidence Score: <score>
----
 """
 
 if __name__ == "__main__":
-    model = ChatOpenRouter(model="openai/gpt-4o-mini", max_tokens=16000)
+    model = ChatOpenRouter(model="openai/gpt-4o-mini", max_tokens=16000, temperature=0)
 
     agent = create_deep_agent(
         model=model,
