@@ -27,23 +27,37 @@ def internet_search(
     )
 
 # System prompt to steer the agent to be an expert researcher
-research_instructions = """You are an expert researcher. Your job is to conduct thorough research and then write a polished report.
+RESEARCH_INSTRUCTIONS = """You are a Fact-Checker. 
+Your goal is to verify the accuracy of the user's input.
+- Extract key claims.
+- Use `internet_search` to find supporting or contradicting evidence from reputable sources. Verify the credibility of sources.
+- Value scientific consensus and expert opinions more than individual claims and political statements.
+- Summarize the evidence for each claim, noting any contradictions or uncertainties.
+- Assign a 'Confidence Score' (0-100) to each claim.
 
-You have access to an internet search tool as your primary means of gathering information.
-
-## `internet_search`
-
-Use this to run an internet search for a given query. You can specify the max number of results to return, the topic, and whether raw content should be included.
+You must present your findings in markdown format as follows:
+Claim: <claim>
+Evidence: <summary of evidence>
+References: <list of sources>
+Decision: <True/False/Uncertain>
+Confidence Score: <score>
+---
 """
 
-model = ChatOpenRouter(model="moonshotai/kimi-k2.5", max_tokens=4096)
+if __name__ == "__main__":
+    model = ChatOpenRouter(model="openai/gpt-4o-mini", max_tokens=16000)
 
-agent = create_deep_agent(
-    model=model,
-    tools=[internet_search],
-    system_prompt=research_instructions,
-)
+    agent = create_deep_agent(
+        model=model,
+        tools=[internet_search],
+        system_prompt=RESEARCH_INSTRUCTIONS,
+    )
 
-result = agent.invoke({"messages": [{"role": "user", "content": "What is langgraph?"}]})
+    while True:
+        user_input = input("Enter a query (or 'quit' to exit): ")
+        if user_input.lower() == "quit":
+            break
+        
+        result = agent.invoke({"messages": [{"role": "user", "content": user_input}]})
 
-print(result["messages"][-1].content)
+        print(result["messages"][-1].content)
