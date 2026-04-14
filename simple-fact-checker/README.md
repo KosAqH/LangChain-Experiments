@@ -58,3 +58,8 @@ Reports include:
 - References/sources
 - Verdict (True/False/Uncertain)
 - Confidence score
+
+## Showcase
+
+https://github.com/user-attachments/assets/dbbb6bd8-1a85-4fe6-8037-468d782814cc
+
