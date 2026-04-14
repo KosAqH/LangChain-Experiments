@@ -24,7 +24,7 @@ An AI-powered agent that verifies the accuracy of claims using web research and 
    ```bash
    uv sync
    ```
-2. Create a `.env` file with your API keys. Use `env.example` file for reference:
+2. Create a `.env` file in the `simple-fact-checker/` directory with your API keys. Use `env.example` file for reference:
 
    ```
    TAVILY_API_KEY=your_key_here

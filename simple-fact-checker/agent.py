@@ -14,14 +14,25 @@ from tavily import TavilyClient
 dotenv.load_dotenv()
 tavily_client = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
 
+# Get the directory where this script is located
+SCRIPT_DIR = Path(__file__).parent
+
+def sanitize_filename(name: str) -> str:
+    RESTRICTED_CHARS = ['<', '>', ':', '"', '/', '\\', '|', '?', '*']
+    for char in RESTRICTED_CHARS:
+        name = name.replace(char, '')
+    return name
+
 def save_markdown(content: str, query: str) -> None:
-    filename = f"reports/{int(time.time())}_{query[:20].replace(' ', '_')}.md"
+    safe_query = sanitize_filename(query[:20].replace(' ', '_'))
+    filename = SCRIPT_DIR / "reports" / f"{int(time.time())}_{safe_query}.md"
     with open(filename, "w", encoding="utf-8") as f:
         f.write(content)
     print(f"Report saved to {filename}")
 
 def log_search(query: str, data: dict) -> None:
-    filename = f"logs/raw_searches/{int(time.time())}_{query[:20].replace(' ', '_')}.json"
+    safe_query = sanitize_filename(query[:20].replace(' ', '_'))
+    filename = SCRIPT_DIR / "logs" / "raw_searches" / f"{int(time.time())}_{safe_query}.json"
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
 
@@ -63,8 +74,8 @@ You must present your findings in markdown format as follows:
 """
 
 if __name__ == "__main__":
-    Path("logs/raw_searches").mkdir(parents=True, exist_ok=True)
-    Path("reports").mkdir(parents=True, exist_ok=True)
+    (SCRIPT_DIR / "logs" / "raw_searches").mkdir(parents=True, exist_ok=True)
+    (SCRIPT_DIR / "reports").mkdir(parents=True, exist_ok=True)
 
     model = ChatOpenRouter(model="openai/gpt-4o-mini", max_tokens=16000, temperature=0)
 
