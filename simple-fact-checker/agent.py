@@ -12,6 +12,7 @@ from langchain_openrouter import ChatOpenRouter
 from tavily import TavilyClient
 
 dotenv.load_dotenv()
+tavily_client = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
 
 def save_markdown(content: str, query: str) -> None:
     filename = f"reports/{int(time.time())}_{query[:20].replace(' ', '_')}.md"
@@ -23,9 +24,6 @@ def log_search(query: str, data: dict) -> None:
     filename = f"logs/raw_searches/{int(time.time())}_{query[:20].replace(' ', '_')}.json"
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
-
-
-tavily_client = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
 
 def internet_search(
     query: str,

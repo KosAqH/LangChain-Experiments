@@ -33,7 +33,7 @@ An AI-powered agent that verifies the accuracy of claims using web research and 
 3. Run the agent:
 
    ```bash
-   uv run basic-agent/agent.py
+   uv run simple-fact-checker/agent.py
    ```
 
 ## Usage

@@ -6,5 +6,5 @@ A collection of AI agents and workflowsbuilt with LangChain to explore various c
 
 | Agent | Description |
 |-------|-------------|
-| [Fact-Checker](basic-agent/) | Verifies claim accuracy using web search and CRAAP test methodology |
+| [Fact-Checker](simple-fact-checker/) | Verifies claim accuracy using web search and CRAAP test methodology |
 <!-- | Python Docs RAG | Retrieval-augmented generation agent for Python documentation Q&A | -->
