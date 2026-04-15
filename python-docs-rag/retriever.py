@@ -111,13 +111,8 @@ class DataRetriever:
         reranked = sorted(
             candidates, key=lambda doc: self._score(doc, q_tokens, focus), reverse=True
         )
-        print(f"Retrieved {len(candidates)} dense candidates, reranked top 8:")
-        for i, doc in enumerate(reranked[:8], start=1):
-            score = self._score(doc, q_tokens, focus)
-            preview = doc.page_content[:100].replace(chr(10), " ")
-            print(
-                f"  [{i}] {doc.metadata.get('source', 'unknown')}, {score}, {preview}..."
-            )
+        print(f"Retrieved {len(candidates)} dense candidates, reranked top 8")
+
         return reranked[:8]
 
     def _tokenize(self, text: str) -> set[str]:
