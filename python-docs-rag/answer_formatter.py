@@ -18,37 +18,21 @@ class AnswerFormatter:
         return "\n\n".join(lines)
 
     def normalize_sources(
-        self, answer: RagAnswer, docs: list[Document]
+        self, answer: RagAnswer
     ) -> list[tuple[str, str]]:
-        """Map model-provided sources to retrieved docs, allowing source-only/url-only entries."""
-        doc_pairs = [
-            (str(doc.metadata.get("source", "")), str(doc.metadata.get("url", "")))
-            for doc in docs
-        ]
-        by_source = {source: url for source, url in doc_pairs if source}
-        by_url = {url: source for source, url in doc_pairs if url}
+        """Keep only complete source-url entries and remove duplicates."""
+        seen = set()
 
-        normalized: list[tuple[str, str]] = []
-        seen: set[tuple[str, str]] = set()
         for item in answer.sources:
             source = item.source.strip()
             url = item.url.strip()
 
-            if source and not url:
-                url = by_source.get(source, "")
-            if url and not source:
-                source = by_url.get(url, "")
-            if source and source in by_source:
-                url = by_source[source]
-            elif url and url in by_url:
-                source = by_url[url]
-            else:
+            if not source or not url:
                 continue
 
             candidate = (source, url)
             if candidate in seen:
                 continue
             seen.add(candidate)
-            normalized.append(candidate)
 
-        return normalized
+        return list(seen)

@@ -49,7 +49,7 @@ def main() -> None:
         context = formatter.format_context(retrieved_docs)
         result = chain.invoke({"question": question, "context": context})
         answer = coerce_answer_obj(result)
-        sources = formatter.normalize_sources(answer, retrieved_docs)
+        sources = formatter.normalize_sources(answer)
 
         print(f"\nAnswer:\n{answer.message.strip()}")
         if sources:
