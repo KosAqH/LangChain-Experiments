@@ -79,13 +79,8 @@ class DataRetriever:
 		self.score_boost_content_match = score_boost_content_match
 		self.retriever: BaseRetriever | None = None
 	
-	def build(self, docs: list[Document]) -> None:
-		"""Build the dense retriever from documents."""
-		splitter = RecursiveCharacterTextSplitter(
-			chunk_size=self.chunk_size,
-			chunk_overlap=self.chunk_overlap,
-			separators=["\n\n", "\n", ". ", " ", ""],
-		)
+	def build(self, docs: list[Document] | None = None) -> None:
+		"""Load persisted dense retriever or build it from documents."""
 
 		embeddings = HuggingFaceEmbeddings(
 			model_name=self.embedding_model,
@@ -106,6 +101,18 @@ class DataRetriever:
 				return
 			except Exception as exc:
 				print(f"Failed to load persisted vector store, rebuilding: {exc}")
+
+		if not docs:
+			raise RuntimeError(
+				"No documents provided to build retriever. "
+				"Set REBUILD_VECTORSTORE=1 or provide docs when no persisted index is available."
+			)
+
+		splitter = RecursiveCharacterTextSplitter(
+			chunk_size=self.chunk_size,
+			chunk_overlap=self.chunk_overlap,
+			separators=["\n\n", "\n", ". ", " ", ""],
+		)
 
 		chunks = splitter.split_documents(docs)
 		vector_store = FAISS.from_documents(chunks, embeddings)
@@ -239,7 +246,11 @@ You are a Python docs assistant.
 Use ONLY the provided context from local Python documentation to answer.
 Assume, that the question is about Python 3.14 unless specified otherwise.
 If you can't find the answer, say you don't know.
-Always include source references like [1] - faq/programming, [2] - library/argparse.
+Always include source references at the end of your answer in bullet points under Sources header like this:
+```
+## Sources
+- library/datetime.txt -> https://docs.python.org/3.14/library/datetime.html
+```
 Only cite sources that directly support your answer.
 
 Question:
@@ -258,18 +269,22 @@ def main() -> None:
 	if not os.getenv("OPENROUTER_API_KEY"):
 		raise RuntimeError("Set OPENROUTER_API_KEY before running this script.")
 
-	if not DOCS_DIR.exists():
-		raise FileNotFoundError(f"Docs folder not found: {DOCS_DIR}")
-
-	loader = DataLoader(docs_dir=DOCS_DIR, base_url=DOCS_BASE_URL)
-	docs = loader.load()
-	if not docs:
-		raise RuntimeError(f"No .txt documents loaded from: {DOCS_DIR}")
-
 	retriever = DataRetriever(
 		vectorstore_dir=VECTORSTORE_DIR,
 		embedding_model=EMBEDDING_MODEL,
 	)
+
+	rebuild_index = os.getenv("REBUILD_VECTORSTORE", "0") == "1"
+	docs: list[Document] | None = None
+	if rebuild_index or not VECTORSTORE_DIR.exists():
+		if not DOCS_DIR.exists():
+			raise FileNotFoundError(f"Docs folder not found: {DOCS_DIR}")
+
+		loader = DataLoader(docs_dir=DOCS_DIR, base_url=DOCS_BASE_URL)
+		docs = loader.load()
+		if not docs:
+			raise RuntimeError(f"No .txt documents loaded from: {DOCS_DIR}")
+
 	retriever.build(docs)
 	formatter = AnswerFormatter()
 	chain = build_chain()
