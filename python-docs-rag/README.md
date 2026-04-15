@@ -144,3 +144,9 @@ Augmented Response
 ## Troubleshooting
 
 - **FAISS index errors**: Delete `data/faiss_python_docs/` to rebuild
+
+## Showcase
+
+https://github.com/user-attachments/assets/e004b6d5-42f6-4693-bdac-1d834cdd7451
+
+
