@@ -8,17 +8,17 @@ from schemas import RagAnswer
 
 
 def build_chain():
-	"""Build a structured-output answer chain."""
-	llm = ChatOpenAI(
-		model=OPENROUTER_MODEL,
-		temperature=0,
-		api_key=OPENROUTER_API_KEY,
-		base_url="https://openrouter.ai/api/v1",
-	)
-	structured_llm = llm.with_structured_output(RagAnswer)
+    """Build a structured-output answer chain."""
+    llm = ChatOpenAI(
+        model=OPENROUTER_MODEL,
+        temperature=0,
+        api_key=OPENROUTER_API_KEY,
+        base_url="https://openrouter.ai/api/v1",
+    )
+    structured_llm = llm.with_structured_output(RagAnswer)
 
-	prompt = ChatPromptTemplate.from_template(
-		"""
+    prompt = ChatPromptTemplate.from_template(
+        """
 You are a Python docs assistant.
 Use ONLY the provided context from local Python documentation to answer.
 Assume, that the question is about Python 3.14 unless specified otherwise.
@@ -33,15 +33,15 @@ Question:
 Context:
 {context}
 """.strip()
-	)
+    )
 
-	return prompt | structured_llm
+    return prompt | structured_llm
 
 
 def coerce_answer_obj(result: Any) -> RagAnswer:
-	"""Defensive conversion in case a provider returns dict-like structured data."""
-	if isinstance(result, RagAnswer):
-		return result
-	if isinstance(result, dict):
-		return RagAnswer.model_validate(result)
-	raise TypeError(f"Unexpected structured output type: {type(result).__name__}")
+    """Defensive conversion in case a provider returns dict-like structured data."""
+    if isinstance(result, RagAnswer):
+        return result
+    if isinstance(result, dict):
+        return RagAnswer.model_validate(result)
+    raise TypeError(f"Unexpected structured output type: {type(result).__name__}")
