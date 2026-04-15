@@ -17,9 +17,7 @@ class AnswerFormatter:
             lines.append(f"[{i}] {source}\n{doc.page_content}")
         return "\n\n".join(lines)
 
-    def normalize_sources(
-        self, answer: RagAnswer
-    ) -> list[tuple[str, str]]:
+    def normalize_sources(self, answer: RagAnswer) -> list[tuple[str, str]]:
         """Keep only complete source-url entries and remove duplicates."""
         seen = set()
 
