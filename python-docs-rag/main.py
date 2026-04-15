@@ -1,9 +1,9 @@
 import os
 import re
 from pathlib import Path
+from typing import Any
 
 from langchain_core.documents import Document
-from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.retrievers import BaseRetriever
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -11,6 +11,7 @@ from langchain_openai import ChatOpenAI
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
 from dotenv import load_dotenv
+from pydantic import BaseModel, Field
 
 
 BASE_DIR = Path(__file__).parent
@@ -27,6 +28,20 @@ SCORE_BOOST_CONTENT_MATCH = 1.0
 load_dotenv(dotenv_path=BASE_DIR / ".env")
 
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
+
+
+class UsedSource(BaseModel):
+	"""Single source used by the assistant."""
+
+	source: str = Field(description="Relative source file path, e.g. library/datetime.txt")
+	url: str = Field(default="", description="Source URL")
+
+
+class RagAnswer(BaseModel):
+	"""Structured RAG answer returned by the LLM."""
+
+	message: str = Field(description="Final answer for the user")
+	sources: list[UsedSource] = Field(default_factory=list, description="Sources supporting the answer")
 
 
 class DataLoader:
@@ -200,35 +215,31 @@ class AnswerFormatter:
 			lines.append(f"[{i}] {source}\n{doc.page_content}")
 		return "\n\n".join(lines)
 
-	def extract_cited_sources(self, answer: str, docs: list[Document]) -> list[tuple[list[int], str, str]]:
-		"""Return cited sources grouped by (source, url) with merged [n] indices."""
-		if not docs:
-			return []
+	def normalize_sources(self, answer: RagAnswer, docs: list[Document]) -> list[tuple[str, str]]:
+		"""Keep only sources that are present in retrieved context docs."""
+		print(f"[Debug] Normalizing sources from answer: {answer.sources}")
+		valid_sources: set[tuple[str, str]] = {
+			(str(doc.metadata.get("source", "")), str(doc.metadata.get("url", ""))) for doc in docs
+		}
+		url_to_source = {url: source for source, url in valid_sources if url}
 
-		max_index = len(docs)
-		cited_indices = [
-			int(match)
-			for match in re.findall(r"\[(\d+)\]", answer)
-			if 1 <= int(match) <= max_index
-		]
-
-		grouped: dict[tuple[str, str], list[int]] = {}
-		order: list[tuple[str, str]] = []
-		seen_indices: set[int] = set()
-		for idx in cited_indices:
-			if idx in seen_indices:
+		normalized: list[tuple[str, str]] = []
+		seen: set[tuple[str, str]] = set()
+		for item in answer.sources:
+			source = item.source.strip()
+			url = item.url.strip()
+			if not source and url:
+				source = url_to_source.get(url, "")
+			if not source:
 				continue
-			seen_indices.add(idx)
-			doc = docs[idx - 1]
-			source = str(doc.metadata.get("source", "unknown"))
-			url = str(doc.metadata.get("url", ""))
-			key = (source, url)
-			if key not in grouped:
-				grouped[key] = []
-				order.append(key)
-			grouped[key].append(idx)
-
-		return [(grouped[key], key[0], key[1]) for key in order]
+			candidate = (source, url)
+			if valid_sources and candidate not in valid_sources:
+				continue
+			if candidate in seen:
+				continue
+			seen.add(candidate)
+			normalized.append(candidate)
+		return normalized
 
 
 def build_chain():
@@ -239,6 +250,7 @@ def build_chain():
 		api_key=os.getenv("OPENROUTER_API_KEY"),
 		base_url="https://openrouter.ai/api/v1",
 	)
+	structured_llm = llm.with_structured_output(RagAnswer)
 
 	prompt = ChatPromptTemplate.from_template(
 		"""
@@ -246,12 +258,9 @@ You are a Python docs assistant.
 Use ONLY the provided context from local Python documentation to answer.
 Assume, that the question is about Python 3.14 unless specified otherwise.
 If you can't find the answer, say you don't know.
-Always include source references at the end of your answer in bullet points under Sources header like this:
-```
-## Sources
-- library/datetime.txt -> https://docs.python.org/3.14/library/datetime.html
-```
-Only cite sources that directly support your answer.
+Return a concise answer and list only sources that directly support the answer.
+For every source generate url based on source path like this: library/datetime.txt -> https://docs.python.org/3.14/library/datetime.html
+Every source must be from the provided context.
 
 Question:
 {question}
@@ -261,8 +270,17 @@ Context:
 """.strip()
 	)
 
-	chain = prompt | llm | StrOutputParser()
+	chain = prompt | structured_llm
 	return chain
+
+
+def _coerce_answer_obj(result: Any) -> RagAnswer:
+	"""Defensive conversion in case a provider returns dict-like structured data."""
+	if isinstance(result, RagAnswer):
+		return result
+	if isinstance(result, dict):
+		return RagAnswer.model_validate(result)
+	raise TypeError(f"Unexpected structured output type: {type(result).__name__}")
 
 
 def main() -> None:
@@ -298,17 +316,18 @@ def main() -> None:
 
 		retrieved_docs = retriever.retrieve(question)
 		context = formatter.format_context(retrieved_docs)
-		answer = chain.invoke({"question": question, "context": context})
-		sources = formatter.extract_cited_sources(answer, retrieved_docs)
-		print(f"\nAnswer:\n{answer}")
+		result = chain.invoke({"question": question, "context": context})
+		answer = _coerce_answer_obj(result)
+		sources = formatter.normalize_sources(answer, retrieved_docs)
+		print(f"\n[Debug] Normalized sources: {sources}")
+		print(f"\nAnswer:\n{answer.message.strip()}")
 		if sources:
-			print("\nSources cited in answer:")
-			for indices, source, url in sources:
-				index_label = ",".join(str(idx) for idx in indices)
+			print("\nSources used:")
+			for source, url in sources:
 				if url:
-					print(f"  [{index_label}] {source} -> {url}")
+					print(f"  - {source} -> {url}")
 				else:
-					print(f"  [{index_label}] {source}")
+					print(f"  - {source}")
 
 
 if __name__ == "__main__":
