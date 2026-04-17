@@ -1,0 +1,10 @@
+{
+  "env": ".env",
+  "graphs": {
+    "basic_graph": "module_1.graph:graph"
+  },
+  "source": {
+    "kind": "uv",
+    "root": ".."
+  }
+}
