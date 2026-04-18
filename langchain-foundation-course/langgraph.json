@@ -1,7 +1,7 @@
 {
   "env": ".env",
   "graphs": {
-    "basic_graph": "module_1.graph:graph",
+    "basic_graph": "module_1.01_graph:graph",
     "router_graph": "module_1.03_router:graph"
   },
   "source": {
