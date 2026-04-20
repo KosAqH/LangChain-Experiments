@@ -18,6 +18,7 @@ dependencies = [
     "sentence-transformers>=5.1.2",
     "tavily-python>=0.7.23",
     "langgraph-cli[inmem]>=0.4.22",
+    "langgraph-checkpoint-sqlite>=3.0.3",
 ]
 
 [dependency-groups]

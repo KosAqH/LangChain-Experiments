@@ -1,4 +1,5 @@
 import dotenv
+import sqlite3
 dotenv.load_dotenv()  # Load environment variables from .env file
 
 from typing import Literal
@@ -6,9 +7,12 @@ from langchain_core.messages import HumanMessage, SystemMessage, RemoveMessage
 from langgraph.graph import MessagesState
 from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import MemorySaver
+from langgraph.checkpoint.sqlite import SqliteSaver
 
 from langchain_openrouter import ChatOpenRouter
 model = ChatOpenRouter(model="openai/gpt-4o-mini", temperature=0) 
+
+USE_SQLITE_DB = True
 
 # State class to store messages and summary
 class State(MessagesState):
@@ -70,8 +74,14 @@ workflow.add_conditional_edges("conversation", should_continue)
 workflow.add_edge("summarize_conversation", END)
 
 # Compile
-memory = MemorySaver()
-graph = workflow.compile(checkpointer=memory)
+if USE_SQLITE_DB == False:
+    memory = MemorySaver()
+    graph = workflow.compile(checkpointer=memory)
+else:
+    # It is important to set check_same_thread to False, as LangGraph may access the database from multiple threads.
+    conn = sqlite3.connect("chatbot_memory.db", check_same_thread=False)
+    memory = SqliteSaver(conn=conn)
+    graph = workflow.compile(checkpointer=memory)
 
 
 if __name__ == "__main__":
