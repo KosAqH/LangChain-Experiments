@@ -1,12 +1,13 @@
 import dotenv
 
-dotenv.load_dotenv()
-
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openrouter import ChatOpenRouter
 
+from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import START, StateGraph, MessagesState
 from langgraph.prebuilt import tools_condition, ToolNode
+
+dotenv.load_dotenv()
 
 
 def add(a: int, b: int) -> int:
@@ -70,8 +71,6 @@ builder.add_conditional_edges(
 builder.add_edge("tools", "assistant")
 
 # Add memory and compile
-from langgraph.checkpoint.memory import MemorySaver
-
 memory = MemorySaver()
 react_graph_memory = builder.compile(checkpointer=memory)
 

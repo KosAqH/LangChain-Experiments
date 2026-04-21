@@ -1,8 +1,12 @@
 import dotenv
-
-dotenv.load_dotenv()  # Load environment variables from .env file
-
+from langchain_core.messages import HumanMessage, SystemMessage
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import MessagesState
+from langgraph.graph import START, StateGraph
 from langchain_openrouter import ChatOpenRouter
+from langgraph.prebuilt import tools_condition, ToolNode
+
+dotenv.load_dotenv()
 
 
 def multiply(a: int, b: int) -> int:
@@ -39,14 +43,6 @@ def divide(a: int, b: int) -> float:
 tools = [add, multiply, divide]
 llm = ChatOpenRouter(model="openai/gpt-4o-mini", temperature=0)
 llm_with_tools = llm.bind_tools(tools)
-
-
-from langgraph.checkpoint.memory import MemorySaver
-from langgraph.graph import MessagesState
-from langgraph.graph import START, StateGraph
-from langgraph.prebuilt import tools_condition, ToolNode
-
-from langchain_core.messages import HumanMessage, SystemMessage
 
 # System message
 sys_msg = SystemMessage(

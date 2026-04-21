@@ -1,7 +1,5 @@
 import dotenv
 
-dotenv.load_dotenv()
-
 import operator
 from typing import Annotated
 from typing_extensions import TypedDict
@@ -12,6 +10,8 @@ from langchain_openrouter import ChatOpenRouter
 
 from langgraph.types import Send
 from langgraph.graph import END, StateGraph, START
+
+dotenv.load_dotenv()
 
 # Prompts we will use
 subjects_prompt = """Generate a list of 3 sub-topics that are all related to this overall topic: {topic}."""

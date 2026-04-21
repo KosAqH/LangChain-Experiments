@@ -1,7 +1,4 @@
 import dotenv
-
-dotenv.load_dotenv()
-
 import operator
 
 from typing import Annotated
@@ -15,6 +12,8 @@ from langchain_tavily import TavilySearch
 from langchain_openrouter import ChatOpenRouter
 
 from langgraph.graph import StateGraph, START, END
+
+dotenv.load_dotenv()
 
 llm = ChatOpenRouter(model="openai/gpt-4o-mini", temperature=0)
 

@@ -1,8 +1,6 @@
 import dotenv
 import sqlite3
 
-dotenv.load_dotenv()  # Load environment variables from .env file
-
 from typing import Literal
 from langchain_core.messages import HumanMessage, SystemMessage, RemoveMessage
 from langgraph.graph import MessagesState
@@ -11,6 +9,8 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.checkpoint.sqlite import SqliteSaver
 
 from langchain_openrouter import ChatOpenRouter
+
+dotenv.load_dotenv()  # Load environment variables from .env file
 
 model = ChatOpenRouter(model="openai/gpt-4o-mini", temperature=0)
 
@@ -71,7 +71,7 @@ def summarize_conversation(state: State):
 # Define a new graph
 workflow = StateGraph(State)
 workflow.add_node("conversation", call_model)
-workflow.add_node(summarize_conversation)
+workflow.add_node("summarize_conversation", summarize_conversation)
 
 # Set the entrypoint as conversation
 workflow.add_edge(START, "conversation")
@@ -79,7 +79,7 @@ workflow.add_conditional_edges("conversation", should_continue)
 workflow.add_edge("summarize_conversation", END)
 
 # Compile
-if USE_SQLITE_DB == False:
+if not USE_SQLITE_DB:
     memory = MemorySaver()
     graph = workflow.compile(checkpointer=memory)
 else:

@@ -1,9 +1,10 @@
 import dotenv
 
-dotenv.load_dotenv()
-
 from langchain_core.messages import HumanMessage
-from langgraph.graph import MessagesState
+from langchain_openrouter import ChatOpenRouter
+from langgraph.graph import MessagesState, StateGraph, START, END
+
+dotenv.load_dotenv()
 
 
 class MessagesState(MessagesState):
@@ -12,8 +13,6 @@ class MessagesState(MessagesState):
 
 
 # Model
-from langchain_openrouter import ChatOpenRouter
-
 llm = ChatOpenRouter(model="openai/gpt-4o-mini")
 
 
@@ -34,8 +33,6 @@ llm_with_tools = llm.bind_tools([multiply])
 def tool_calling_llm(state: MessagesState):
     return {"messages": [llm_with_tools.invoke(state["messages"])]}
 
-
-from langgraph.graph import StateGraph, START, END
 
 # Build graph
 builder = StateGraph(MessagesState)

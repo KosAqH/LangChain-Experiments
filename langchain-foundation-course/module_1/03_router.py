@@ -1,14 +1,13 @@
 import dotenv
 
-dotenv.load_dotenv()
-
 from langchain_openrouter import ChatOpenRouter
 from langgraph.graph import MessagesState
 from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import ToolNode, tools_condition
 
+dotenv.load_dotenv()
 
-# Tool
+
 def multiply(a: int, b: int) -> int:
     """Multiplies a and b.
 

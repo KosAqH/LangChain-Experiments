@@ -1,6 +1,5 @@
 import dotenv
 
-dotenv.load_dotenv()
 
 import operator
 from pydantic import BaseModel, Field
@@ -19,6 +18,8 @@ from langchain_openrouter import ChatOpenRouter
 
 from langgraph.types import Send
 from langgraph.graph import END, MessagesState, START, StateGraph
+
+dotenv.load_dotenv()
 
 ### LLM
 
@@ -342,7 +343,7 @@ def write_section(state: InterviewState):
     """Node to write a section"""
 
     # Get state
-    interview = state["interview"]
+    # interview = state["interview"]
     context = state["context"]
     analyst = state["analyst"]
 
@@ -530,7 +531,7 @@ def finalize_report(state: ResearchGraphState):
     if "## Sources" in content:
         try:
             content, sources = content.split("\n## Sources\n")
-        except:
+        except Exception as _:
             sources = None
     else:
         sources = None
