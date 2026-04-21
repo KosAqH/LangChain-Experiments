@@ -8,5 +8,6 @@ __pycache__/
 */data/*
 *.pyc
 *.db
+*.db-*
 
 .langgraph_api/
