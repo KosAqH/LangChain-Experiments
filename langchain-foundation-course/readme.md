@@ -12,7 +12,7 @@ This directory contains hands-on LangGraph examples from the LangGraph Foundatio
 
 ## Note
 
-This code is based on the LangGraph Foundation Course examples, with small local modifications and fixes.
+This code is based on the [LangGraph Foundation Course](https://academy.langchain.com/courses/intro-to-langgraph) examples, with small local modifications and fixes.
 
 ## How To Run
 
