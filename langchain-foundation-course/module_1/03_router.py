@@ -1,10 +1,12 @@
 import dotenv
+
 dotenv.load_dotenv()
 
 from langchain_openrouter import ChatOpenRouter
 from langgraph.graph import MessagesState
 from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import ToolNode, tools_condition
+
 
 # Tool
 def multiply(a: int, b: int) -> int:
@@ -16,13 +18,16 @@ def multiply(a: int, b: int) -> int:
     """
     return a * b
 
+
 # LLM with bound tool
 llm = ChatOpenRouter(model="openai/gpt-4o-mini")
 llm_with_tools = llm.bind_tools([multiply])
 
+
 # Node
 def tool_calling_llm(state: MessagesState):
     return {"messages": [llm_with_tools.invoke(state["messages"])]}
+
 
 # Build graph
 builder = StateGraph(MessagesState)

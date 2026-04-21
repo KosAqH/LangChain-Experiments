@@ -16,18 +16,20 @@ from langchain_openrouter import ChatOpenRouter
 
 from langgraph.graph import StateGraph, START, END
 
-llm = ChatOpenRouter(model="openai/gpt-4o-mini", temperature=0) 
+llm = ChatOpenRouter(model="openai/gpt-4o-mini", temperature=0)
+
 
 class State(TypedDict):
     question: str
     answer: str
     context: Annotated[list, operator.add]
 
+
 def search_web(state):
-    """ Retrieve docs from web search """
+    """Retrieve docs from web search"""
 
     tavily_search = TavilySearch(max_results=3)
-    data = tavily_search.invoke({"query": state['question']})
+    data = tavily_search.invoke({"query": state["question"]})
     search_docs = data.get("results", data)
 
     formatted_search_docs = "\n\n---\n\n".join(
@@ -37,13 +39,13 @@ def search_web(state):
         ]
     )
 
-    return {"context": [formatted_search_docs]} 
+    return {"context": [formatted_search_docs]}
+
 
 def search_wikipedia(state):
-    """ Retrieve docs from wikipedia """
+    """Retrieve docs from wikipedia"""
 
-    search_docs = WikipediaLoader(query=state['question'], 
-                                  load_max_docs=2).load()
+    search_docs = WikipediaLoader(query=state["question"], load_max_docs=2).load()
 
     formatted_search_docs = "\n\n---\n\n".join(
         [
@@ -52,10 +54,11 @@ def search_wikipedia(state):
         ]
     )
 
-    return {"context": [formatted_search_docs]} 
+    return {"context": [formatted_search_docs]}
+
 
 def generate_answer(state):
-    """ Node to answer a question """
+    """Node to answer a question"""
 
     # Get state
     context = state["context"]
@@ -63,19 +66,22 @@ def generate_answer(state):
 
     # Template
     answer_template = """Answer the question {question} using this context: {context}"""
-    answer_instructions = answer_template.format(question=question, 
-                                                       context=context)    
+    answer_instructions = answer_template.format(question=question, context=context)
     # Answer
-    answer = llm.invoke([SystemMessage(content=answer_instructions)]+[HumanMessage(content=f"Answer the question.")])
-      
+    answer = llm.invoke(
+        [SystemMessage(content=answer_instructions)]
+        + [HumanMessage(content="Answer the question.")]
+    )
+
     # Append it to state
     return {"answer": answer}
+
 
 # Add nodes
 builder = StateGraph(State)
 
-# Initialize each node with node_secret 
-builder.add_node("search_web",search_web)
+# Initialize each node with node_secret
+builder.add_node("search_web", search_web)
 builder.add_node("search_wikipedia", search_wikipedia)
 builder.add_node("generate_answer", generate_answer)
 

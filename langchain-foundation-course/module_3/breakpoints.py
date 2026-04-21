@@ -1,7 +1,9 @@
 import dotenv
+
 dotenv.load_dotenv()  # Load environment variables from .env file
 
 from langchain_openrouter import ChatOpenRouter
+
 
 def multiply(a: int, b: int) -> int:
     """Multiply a and b.
@@ -11,6 +13,7 @@ def multiply(a: int, b: int) -> int:
         b: second int
     """
     return a * b
+
 
 # This will be a tool
 def add(a: int, b: int) -> int:
@@ -22,6 +25,7 @@ def add(a: int, b: int) -> int:
     """
     return a + b
 
+
 def divide(a: int, b: int) -> float:
     """Divide a by b.
 
@@ -30,6 +34,7 @@ def divide(a: int, b: int) -> float:
         b: second int
     """
     return a / b
+
 
 tools = [add, multiply, divide]
 llm = ChatOpenRouter(model="openai/gpt-4o-mini", temperature=0)
@@ -41,14 +46,18 @@ from langgraph.graph import MessagesState
 from langgraph.graph import START, StateGraph
 from langgraph.prebuilt import tools_condition, ToolNode
 
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 
 # System message
-sys_msg = SystemMessage(content="You are a helpful assistant tasked with performing arithmetic on a set of inputs.")
+sys_msg = SystemMessage(
+    content="You are a helpful assistant tasked with performing arithmetic on a set of inputs."
+)
+
 
 # Node
 def assistant(state: MessagesState):
-   return {"messages": [llm_with_tools.invoke([sys_msg] + state["messages"])]}
+    return {"messages": [llm_with_tools.invoke([sys_msg] + state["messages"])]}
+
 
 # Graph
 builder = StateGraph(MessagesState)
@@ -79,17 +88,16 @@ thread = {"configurable": {"thread_id": "2"}}
 
 # Run the graph until the first interruption
 for event in graph.stream(initial_input, thread, stream_mode="values"):
-    event['messages'][-1].pretty_print()
+    event["messages"][-1].pretty_print()
 
 # Get user feedback
 user_approval = input("Do you want to call the tool? (yes/no): ")
 
 # Check approval
 if user_approval.lower() == "yes":
-    
     # If approved, continue the graph execution
     for event in graph.stream(None, thread, stream_mode="values"):
-        event['messages'][-1].pretty_print()
-        
+        event["messages"][-1].pretty_print()
+
 else:
     print("Operation cancelled by user.")

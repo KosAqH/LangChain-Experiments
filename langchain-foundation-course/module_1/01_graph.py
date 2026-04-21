@@ -9,41 +9,48 @@ from typing_extensions import TypedDict
 
 ## State is a dictionary that holds the state of the graph. Each node can read and write to this state.
 
+
 class State(TypedDict):
     graph_state: str
 
+
 ## Node is a function that takes the state as input and returns a dictionary that will be merged into the state.
+
 
 def node_1(state):
     print("---Node 1---")
-    return {"graph_state": state['graph_state'] +" I am"}
+    return {"graph_state": state["graph_state"] + " I am"}
+
 
 def node_2(state):
     print("---Node 2---")
-    return {"graph_state": state['graph_state'] +" happy!"}
+    return {"graph_state": state["graph_state"] + " happy!"}
+
 
 def node_3(state):
     print("---Node 3---")
-    return {"graph_state": state['graph_state'] +" sad!"}
+    return {"graph_state": state["graph_state"] + " sad!"}
+
 
 ## Edges is a function that takes the state as input and returns the name of the next node to execute.
 
 import random
 from typing import Literal
 
+
 def decide_mood(state) -> Literal["node_2", "node_3"]:
-    
+
     # Often, we will use state to decide on the next node to visit
-    user_input = state['graph_state'] 
-    
+    user_input = state["graph_state"]
+
     # Here, let's just do a 50 / 50 split between nodes 2, 3
     if random.random() < 0.5:
-
         # 50% of the time, we return Node 2
         return "node_2"
-    
+
     # 50% of the time, we return Node 3
     return "node_3"
+
 
 ## Graph is a collection of nodes and edges. It has an entry point and an exit point.
 from langgraph.graph import StateGraph, START, END

@@ -1,5 +1,6 @@
 import dotenv
 import sqlite3
+
 dotenv.load_dotenv()  # Load environment variables from .env file
 
 from typing import Literal
@@ -10,14 +11,17 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.checkpoint.sqlite import SqliteSaver
 
 from langchain_openrouter import ChatOpenRouter
-model = ChatOpenRouter(model="openai/gpt-4o-mini", temperature=0) 
+
+model = ChatOpenRouter(model="openai/gpt-4o-mini", temperature=0)
 
 USE_SQLITE_DB = True
+
 
 # State class to store messages and summary
 class State(MessagesState):
     summary: str
-    
+
+
 def call_model(state: State):
     summary = state.get("summary", "")
 
@@ -28,7 +32,7 @@ def call_model(state: State):
         messages = [SystemMessage(content=system_message)] + state["messages"]
     else:
         messages = state["messages"]
-    
+
     response = model.invoke(messages)
     return {"messages": [response]}
 
@@ -36,10 +40,10 @@ def call_model(state: State):
 def should_continue(state: State) -> Literal["summarize_conversation", "__end__"]:
     """Return the next node to execute."""
     messages = state["messages"]
-    
+
     if len(messages) > 6:
         return "summarize_conversation"
-    
+
     return END
 
 
@@ -58,10 +62,11 @@ def summarize_conversation(state: State):
     # Add prompt to our history
     messages = state["messages"] + [HumanMessage(content=summary_message)]
     response = model.invoke(messages)
-    
-    # Delete all but the 2 most recent messages and add our summary to the state 
+
+    # Delete all but the 2 most recent messages and add our summary to the state
     delete_messages = [RemoveMessage(id=m.id) for m in state["messages"][:-2]]
     return {"summary": response.content, "messages": delete_messages}
+
 
 # Define a new graph
 workflow = StateGraph(State)
@@ -102,5 +107,3 @@ if __name__ == "__main__":
         )
         assistant_message = result["messages"][-1]
         print(f"Assistant: {assistant_message.content}")
-
-
