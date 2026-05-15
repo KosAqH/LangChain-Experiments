@@ -5,6 +5,8 @@ Rules:
 - be concise
 - at the end of note always attach references
 - do not put word "note" or similar in title - I've already know it's a note
+- use only information from the page content, do not add any additional information
+- if hints are provided, use them to focus on specific aspects of the topic
 
 Topic: {topic}
 Hints: {hints}
