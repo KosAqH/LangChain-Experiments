@@ -9,5 +9,6 @@ __pycache__/
 *.pyc
 *.db
 *.db-*
+*.log
 
 .langgraph_api/

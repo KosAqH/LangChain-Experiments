@@ -1,6 +1,9 @@
+import logging
 import requests
 from readability import Document
 from models import NoteState
+
+logger = logging.getLogger("loader")
 
 def fetch_url_content(url: str) -> str:
     """Fetches the content of the URL and extracts the main article text using readability."""
@@ -35,7 +38,7 @@ def loader_node(state: NoteState) -> dict:
         try:
             content_chunks.append(fetch_url_content(url))
         except Exception as e:
-            print(f"Error fetching {url}: {e}")
+            logger.warning("Error fetching %s: %s", url, e)
     
     if content_chunks:
         return {"page_content": "\n\n---\n\n".join(content_chunks)}

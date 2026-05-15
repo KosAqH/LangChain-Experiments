@@ -1,11 +1,14 @@
 import asyncio
 import argparse
+import logging
 from dotenv import load_dotenv
 from db import init_db
 from graph import build_graph
+from log_config import setup_logging
 
 
 load_dotenv()
+logger = setup_logging()
 
 
 async def main(query: str):
@@ -16,11 +19,11 @@ async def main(query: str):
         "query": query,
     })
 
-    print("=== NOTE ===")
-    print(result["note"])
-    print("\n=== FLASHCARDS ===")
-    print(result["flashcards"])
-    print(f"\nSaved to DB with ID: {result.get('note_id')}")
+    logger.info("=== NOTE ===")
+    logger.info(result["note"])
+    logger.info("=== FLASHCARDS ===")
+    logger.info(result["flashcards"])
+    logger.info("Saved to DB with ID: %s", result.get("note_id"))
 
 
 if __name__ == "__main__":
