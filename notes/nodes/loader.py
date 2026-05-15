@@ -1,10 +1,10 @@
 import requests
-from bs4 import BeautifulSoup
+from readability import Document
 from models import NoteState
 
 
 def loader_node(state: NoteState) -> dict:
-    """Fetches and extracts text content from the source URL."""
+    """Fetches and extracts article content from the source URL using readability."""
     url = state["source_url"]
     if not url:
         raise ValueError("No source URL available to load")
@@ -15,15 +15,13 @@ def loader_node(state: NoteState) -> dict:
     response = requests.get(url, headers=headers, timeout=30)
     response.raise_for_status()
 
-    soup = BeautifulSoup(response.text, "html.parser")
+    doc = Document(response.text)
+    html_content = doc.summary()
 
-    # Remove script, style, nav, footer, header elements
-    for element in soup(["script", "style", "nav", "footer", "header", "aside"]):
-        element.decompose()
-
-    # Extract text from main content or body
-    main = soup.find("main") or soup.find("article") or soup.find("body")
-    text = main.get_text(separator="\n", strip=True) if main else soup.get_text(separator="\n", strip=True)
+    # Strip HTML tags to get plain text
+    from lxml.html import fromstring
+    tree = fromstring(html_content)
+    text = tree.text_content()
 
     # Clean up excessive whitespace
     lines = [line.strip() for line in text.splitlines() if line.strip()]
