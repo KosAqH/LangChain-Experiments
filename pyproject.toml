@@ -21,6 +21,8 @@ dependencies = [
     "langgraph-checkpoint-sqlite>=3.0.3",
     "langchain-tavily>=0.2.18",
     "wikipedia>=1.4.0",
+    "aiosqlite>=0.20.0",
+    "beautifulsoup4>=4.12.0",
 ]
 
 [dependency-groups]
