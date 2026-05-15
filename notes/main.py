@@ -1,4 +1,5 @@
 import asyncio
+import argparse
 from dotenv import load_dotenv
 from db import init_db
 from graph import build_graph
@@ -7,14 +8,12 @@ from graph import build_graph
 load_dotenv()
 
 
-async def main():
+async def main(query: str):
     await init_db()
     graph = build_graph()
 
     result = await graph.ainvoke({
-        "topic": "Python decorators",
-        "hints": "Focus on practical examples and common use cases",
-        "source_url": None,
+        "query": query,
     })
 
     print("=== NOTE ===")
@@ -25,4 +24,8 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    parser = argparse.ArgumentParser(description="Generate notes and Anki flashcards from web sources")
+    parser.add_argument("query", help="Query string: topic with optional hints (after - or --) and optional URL")
+    args = parser.parse_args()
+
+    asyncio.run(main(args.query))

@@ -4,7 +4,7 @@ from models import NoteState
 
 async def storage_node(state: NoteState) -> dict:
     """Persists the note and flashcards to SQLite."""
-    resources = [state["source_url"]] if state.get("source_url") else []
+    resources = state.get("source_urls", []) or []
     note_id = await save_note(
         topic=state["topic"],
         resources=resources,
