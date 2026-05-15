@@ -11,9 +11,10 @@ Formatting & Style Rules:
 - **Bullet Prefix Format:** Each bullet must begin with a bolded keyword or short phrase followed by a colon (`* **Key Term:** Explanation.`). 
 - **Grammatical Parallelism:** Ensure the bolded prefixes are consistently written as punchy noun phrases or category identifiers (e.g., use `**Cache Limitations**:` or `**Time Metrics**:` rather than conversational phrases like `**How it limits caching**:`).
 - **Section Density Control:** Limit each level 3 section to a maximum of 3–4 highly related bullet points. If a theme contains more points, split them into a new, distinctly named level 3 header to maintain hyper-focused categorization.
-- **Technical Precision:** Retain and highlight specific technical metrics, figures, industry standards, and exact constraints present in the source text. Bold these metrics inline to maximize visual scannability.
-- **Code & Syntax Blocks:** If the source text contains code snippets or technical syntax, cleanly isolate them inside markdown code blocks immediately following the relevant bullet point.
-- Target a word count of ~250–350 words. Do not include the word "Note" in the title.
+- Keep language professional and precise but also simple.
+- Target a word count of ~250–350 words. Note should be concise.
+- Do not include the word "Note" in the title.
+- Hints added below should be used to guide the structure and content.
 
 Strict Grounding & Link Rules:
 - **Zero Outside Knowledge:** Rely *only* on the explicit facts directly mentioned in the source text. Do not extrapolate, assume, or introduce outside concepts.
