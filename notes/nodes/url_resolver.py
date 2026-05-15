@@ -5,8 +5,8 @@ from models import NoteState
 
 def url_resolver_node(state: NoteState) -> dict:
     """Uses Tavily to find a source URL if one wasn't provided."""
-    if state.get("source_url"):
-        return {"source_url": state["source_url"], "source_urls": state.get("source_urls", [])}
+    if state.get("source_urls"):
+        return {"source_urls": state.get("source_urls", [])}
 
     client = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
     search_query = f"{state['topic']} {' '.join(state['hints'].split()[:5])}".strip()
