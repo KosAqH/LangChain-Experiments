@@ -1,4 +1,5 @@
-from typing import TypedDict, Optional
+from typing import TypedDict, Optional, Annotated
+import operator
 
 
 class FlashcardState(TypedDict):
@@ -7,5 +8,13 @@ class FlashcardState(TypedDict):
     topic_context: str
     max_cards: Optional[int]
     categories: list[str]
-    flashcards: list[dict]
+    flashcards: Annotated[list[dict], operator.add]
     output_file: str
+
+
+class CategoryState(TypedDict):
+    category: str
+    target_language: str
+    topic_context: str
+    max_cards: Optional[int]
+    flashcards: list[dict]
