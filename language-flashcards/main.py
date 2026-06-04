@@ -8,7 +8,9 @@ from langgraph.graph import END, StateGraph, START
 
 from src.nodes.extract_language import extract_language
 from src.nodes.generate_categories import generate_categories
-from src.nodes.generate_flashcards import generate_flashcards
+from src.nodes.generate_words import generate_words
+from src.nodes.generate_sentences import generate_sentences
+from src.nodes.generate_conversations import generate_conversations
 from src.nodes.format_and_save import format_and_save
 from src.state import FlashcardState
 
@@ -21,33 +23,35 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def _route_to_categories(state: FlashcardState):
-    return [
-        Send(
-            "generate_flashcards",
-            {
-                "category": cat,
-                "target_language": state["target_language"],
-                "topic_context": state["topic_context"],
-                "max_cards": state.get("max_cards"),
-            },
-        )
-        for cat in state["categories"]
-    ]
+def _route_to_card_types(state: FlashcardState):
+    sends = []
+    for cat in state["categories"]:
+        base = {
+            "category": cat,
+            "target_language": state["target_language"],
+            "topic_context": state["topic_context"],
+            "max_cards": state.get("max_cards"),
+        }
+        sends.append(Send("generate_words", dict(base)))
+        sends.append(Send("generate_sentences", dict(base)))
+        sends.append(Send("generate_conversations", dict(base)))
+    return sends
 
 
 builder = StateGraph(FlashcardState)
 builder.add_node("extract_language", extract_language)
 builder.add_node("generate_categories", generate_categories)
-builder.add_node("generate_flashcards", generate_flashcards)
+builder.add_node("generate_words", generate_words)
+builder.add_node("generate_sentences", generate_sentences)
+builder.add_node("generate_conversations", generate_conversations)
 builder.add_node("format_and_save", format_and_save)
 
 builder.add_edge(START, "extract_language")
 builder.add_edge("extract_language", "generate_categories")
 builder.add_conditional_edges(
-    "generate_categories", _route_to_categories, ["generate_flashcards"]
+    "generate_categories", _route_to_card_types, ["generate_words", "generate_sentences", "generate_conversations"]
 )
-builder.add_edge("generate_flashcards", "format_and_save")
+builder.add_edge(["generate_words", "generate_sentences", "generate_conversations"], "format_and_save")
 builder.add_edge("format_and_save", END)
 
 graph = builder.compile()

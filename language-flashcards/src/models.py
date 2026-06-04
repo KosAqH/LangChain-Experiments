@@ -12,17 +12,30 @@ class CategoriesResponse(BaseModel):
     categories: list[str]
 
 
-class Flashcard(BaseModel):
+class FlashcardBase(BaseModel):
     category: str
     type: Literal["word", "sentence", "conversation"]
     front_en: str
     back_foreign: str
     pronunciation_en: str
     pronunciation_phonetic: str
+
+
+class Flashcard(FlashcardBase):
     example_en: str = ""
     example_foreign: str = ""
 
 
-class CategoryFlashcards(BaseModel):
+class CategoryWordFlashcards(BaseModel):
     category: str
     flashcards: list[Flashcard]
+
+
+class CategorySentenceFlashcards(BaseModel):
+    category: str
+    flashcards: list[FlashcardBase]
+
+
+class CategoryConversationFlashcards(BaseModel):
+    category: str
+    flashcards: list[FlashcardBase]

@@ -7,14 +7,18 @@ language-flashcards:
 - plan.md - contains the implementation plan for the language flashcards project.
 - output/ - generated flashcard JSON and CSV files.
 - src/
-    - state.py - TypedDict state definitions (FlashcardState, CategoryState).
-    - models.py - Pydantic models for structured LLM output.
+    - state.py - TypedDict state definitions (FlashcardState, CategoryCardTypeState).
+    - models.py - Pydantic models for structured LLM output (FlashcardBase, Flashcard inheritance).
     - nodes/
       - extract_language.py - parses user prompt for language, topic, card count.
       - generate_categories.py - generates relevant categories for topic.
-      - generate_flashcards.py - generates flashcards per category (parallel via Send).
+      - generate_words.py - generates word flashcards per category (parallel via Send).
+      - generate_sentences.py - generates sentence flashcards per category (parallel via Send).
+      - generate_conversations.py - generates conversation flashcards per category (parallel via Send).
       - format_and_save.py - saves output as JSON, CSV, and Anki-import TXT.
     - prompts/
       - extract_language.py - LLM prompt template for language extraction.
       - generate_categories.py - LLM prompt template for category generation.
-      - generate_flashcards.py - LLM prompt template for flashcard generation.
+      - generate_words.py - LLM prompt template for word flashcard generation.
+      - generate_sentences.py - LLM prompt template for sentence flashcard generation.
+      - generate_conversations.py - LLM prompt template for conversation flashcard generation.

@@ -12,7 +12,7 @@ class FlashcardState(TypedDict):
     output_file: str
 
 
-class CategoryState(TypedDict):
+class CategoryCardTypeState(TypedDict):
     category: str
     target_language: str
     topic_context: str
