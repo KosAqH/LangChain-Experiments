@@ -14,28 +14,36 @@ class CategoriesResponse(BaseModel):
 
 class FlashcardBase(BaseModel):
     category: str
-    type: Literal["word", "sentence", "conversation"]
     front_en: str
     back_foreign: str
     pronunciation_en: str
     pronunciation_phonetic: str
 
 
-class Flashcard(FlashcardBase):
+class WordFlashcard(FlashcardBase):
+    type: Literal["word"] = "word"
     example_en: str = ""
     example_foreign: str = ""
 
 
+class SentenceFlashcard(FlashcardBase):
+    type: Literal["sentence"] = "sentence"
+
+
+class ConversationFlashcard(FlashcardBase):
+    type: Literal["conversation"] = "conversation"
+
+
 class CategoryWordFlashcards(BaseModel):
     category: str
-    flashcards: list[Flashcard]
+    flashcards: list[WordFlashcard]
 
 
 class CategorySentenceFlashcards(BaseModel):
     category: str
-    flashcards: list[FlashcardBase]
+    flashcards: list[SentenceFlashcard]
 
 
 class CategoryConversationFlashcards(BaseModel):
     category: str
-    flashcards: list[FlashcardBase]
+    flashcards: list[ConversationFlashcard]

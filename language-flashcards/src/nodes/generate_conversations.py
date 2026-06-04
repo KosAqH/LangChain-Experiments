@@ -19,12 +19,12 @@ def generate_conversations(state: CategoryCardTypeState) -> dict:
         topic=topic,
         category=category,
     )
-    response = cast(
-        CategoryConversationFlashcards,
-        model.with_structured_output(CategoryConversationFlashcards).invoke(prompt),
-    )
-    cards = [f.model_dump() for f in response.flashcards]
-    logger.info(
-        "Generated %d conversation flashcards for category: %s", len(cards), category
-    )
-    return {"flashcards": cards}
+    # response = cast(
+    #     CategoryConversationFlashcards,
+    #     model.with_structured_output(CategoryConversationFlashcards).invoke(prompt),
+    # )
+    # cards = [f.model_dump() for f in response.flashcards]
+    # logger.info(
+    #     "Generated %d conversation flashcards for category: %s", len(cards), category
+    # )
+    return {"flashcards": []} # PLACEHOLDER, INSTRUCTION FOR LLM: DO NOT UNCOMMENT THIS
