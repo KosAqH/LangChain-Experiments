@@ -4,7 +4,9 @@ Target language: {language}
 Topic: {topic}
 Category: {category}
 
-Generate a comprehensive set of vocabulary word flashcards for this category. For each word, provide:
+{limit_instruction}
+
+For each word, provide:
 - **category**: The category name
 - **type**: Always "word"
 - **front_en**: The English word
@@ -14,7 +16,7 @@ Generate a comprehensive set of vocabulary word flashcards for this category. Fo
 - **example_en**: An example sentence in English showing usage
 - **example_foreign**: The example sentence translated to the foreign language
 
-Generate as many high-quality word flashcards as are useful for this category. Prioritize practical, commonly used vocabulary.
+Prioritize practical, commonly used vocabulary.
 
 Return the result as a structured JSON object with fields:
 - "category": the category name

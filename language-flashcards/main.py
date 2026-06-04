@@ -8,6 +8,7 @@ from langgraph.graph import END, StateGraph, START
 
 from src.nodes.extract_language import extract_language
 from src.nodes.generate_categories import generate_categories
+from src.nodes.plan_distribution import plan_distribution
 from src.nodes.generate_words import generate_words
 from src.nodes.generate_sentences import generate_sentences
 from src.nodes.generate_conversations import generate_conversations
@@ -25,22 +26,34 @@ logger = logging.getLogger(__name__)
 
 def _route_to_card_types(state: FlashcardState):
     sends = []
+    limits = state.get("card_limits", {})
     for cat in state["categories"]:
-        base = {
+        cat_limits = limits.get(cat, {})
+        sends.append(Send("generate_words", {
             "category": cat,
             "target_language": state["target_language"],
             "topic_context": state["topic_context"],
-            "max_cards": state.get("max_cards"),
-        }
-        sends.append(Send("generate_words", dict(base)))
-        sends.append(Send("generate_sentences", dict(base)))
-        sends.append(Send("generate_conversations", dict(base)))
+            "limit": cat_limits.get("word"),
+        }))
+        sends.append(Send("generate_sentences", {
+            "category": cat,
+            "target_language": state["target_language"],
+            "topic_context": state["topic_context"],
+            "limit": cat_limits.get("sentence"),
+        }))
+        sends.append(Send("generate_conversations", {
+            "category": cat,
+            "target_language": state["target_language"],
+            "topic_context": state["topic_context"],
+            "limit": cat_limits.get("conversation"),
+        }))
     return sends
 
 
 builder = StateGraph(FlashcardState)
 builder.add_node("extract_language", extract_language)
 builder.add_node("generate_categories", generate_categories)
+builder.add_node("plan_distribution", plan_distribution)
 builder.add_node("generate_words", generate_words)
 builder.add_node("generate_sentences", generate_sentences)
 builder.add_node("generate_conversations", generate_conversations)
@@ -48,8 +61,9 @@ builder.add_node("format_and_save", format_and_save)
 
 builder.add_edge(START, "extract_language")
 builder.add_edge("extract_language", "generate_categories")
+builder.add_edge("generate_categories", "plan_distribution")
 builder.add_conditional_edges(
-    "generate_categories", _route_to_card_types, ["generate_words", "generate_sentences", "generate_conversations"]
+    "plan_distribution", _route_to_card_types, ["generate_words", "generate_sentences", "generate_conversations"]
 )
 builder.add_edge(["generate_words", "generate_sentences", "generate_conversations"], "format_and_save")
 builder.add_edge("format_and_save", END)
@@ -64,6 +78,7 @@ def run(prompt: str) -> dict:
         "topic_context": "",
         "max_cards": None,
         "categories": [],
+        "card_limits": {},
         "flashcards": [],
         "output_file": "",
     }

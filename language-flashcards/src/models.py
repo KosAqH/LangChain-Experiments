@@ -47,3 +47,13 @@ class CategorySentenceFlashcards(BaseModel):
 class CategoryConversationFlashcards(BaseModel):
     category: str
     flashcards: list[ConversationFlashcard]
+
+
+class DistributionEntry(BaseModel):
+    category: str
+    type: str
+    limit: int
+
+
+class DistributionPlan(BaseModel):
+    distribution: list[DistributionEntry]

@@ -14,10 +14,16 @@ def generate_sentences(state: CategoryCardTypeState) -> dict:
     topic = state["topic_context"]
     category = state["category"]
     logger.info("Generating sentence flashcards for category: %s", category)
+    limit = state.get("limit")
+    if limit is None:
+        limit_instruction = "Generate as many high-quality sentence flashcards as are useful for this category."
+    else:
+        limit_instruction = f"Aim to generate approximately {limit} high-quality sentence flashcards."
     prompt = FLASHCARDS_SENTENCES_PROMPT.format(
         language=language,
         topic=topic,
         category=category,
+        limit_instruction=limit_instruction,
     )
     response = cast(
         CategorySentenceFlashcards,

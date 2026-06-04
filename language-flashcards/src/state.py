@@ -8,6 +8,7 @@ class FlashcardState(TypedDict):
     topic_context: str
     max_cards: Optional[int]
     categories: list[str]
+    card_limits: dict[str, dict[str, int]]
     flashcards: Annotated[list[dict], operator.add]
     output_file: str
 
@@ -16,5 +17,5 @@ class CategoryCardTypeState(TypedDict):
     category: str
     target_language: str
     topic_context: str
-    max_cards: Optional[int]
+    limit: Optional[int]
     flashcards: list[dict]
