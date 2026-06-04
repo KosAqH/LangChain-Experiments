@@ -1,6 +1,8 @@
 import logging
 import dotenv
 
+dotenv.load_dotenv()
+
 from langgraph.types import Send
 from langgraph.graph import END, StateGraph, START
 
@@ -17,8 +19,6 @@ logging.basicConfig(
     datefmt="%H:%M:%S",
 )
 logger = logging.getLogger(__name__)
-
-dotenv.load_dotenv()
 
 
 def _route_to_categories(state: FlashcardState):
