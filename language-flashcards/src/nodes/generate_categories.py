@@ -22,6 +22,11 @@ def generate_categories(state: FlashcardState) -> dict:
     topic = state["topic_context"]
     logger.info("Generating categories for %s — %s", language, topic)
     prompt = CATEGORIES_PROMPT.format(language=language, topic=topic)
-    response = cast(CategoriesResponse, model.with_structured_output(CategoriesResponse).invoke(prompt))
-    logger.info("Generated %d categories: %s", len(response.categories), response.categories)
+    response = cast(
+        CategoriesResponse,
+        model.with_structured_output(CategoriesResponse).invoke(prompt),
+    )
+    logger.info(
+        "Generated %d categories: %s", len(response.categories), response.categories
+    )
     return {"categories": response.categories}
