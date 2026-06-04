@@ -8,7 +8,6 @@ Category: {category}
 
 For each word, provide:
 - **category**: The category name
-- **type**: Always "word"
 - **front_en**: The English word
 - **back_foreign**: The foreign language translation
 - **pronunciation_en**: A simple English-approximation pronunciation guide
@@ -20,4 +19,4 @@ Prioritize practical, commonly used vocabulary.
 
 Return the result as a structured JSON object with fields:
 - "category": the category name
-- "flashcards": array of objects with fields: category, type, front_en, back_foreign, pronunciation_en, pronunciation_phonetic, example_en, example_foreign"""
+- "flashcards": array of objects with fields: category, front_en, back_foreign, pronunciation_en, pronunciation_phonetic, example_en, example_foreign"""

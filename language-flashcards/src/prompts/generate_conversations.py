@@ -8,7 +8,6 @@ Category: {category}
 
 For each conversation, provide:
 - **category**: The category name
-- **type**: Always "conversation"
 - **front_en**: The English dialogue
 - **back_foreign**: The foreign language translation
 - **pronunciation_en**: A simple English-approximation pronunciation guide
@@ -18,4 +17,4 @@ Each conversation should be a short back-and-forth exchange (2-4 lines). Priorit
 
 Return the result as a structured JSON object with fields:
 - "category": the category name
-- "flashcards": array of objects with fields: category, type, front_en, back_foreign, pronunciation_en, pronunciation_phonetic"""
+- "flashcards": array of objects with fields: category, front_en, back_foreign, pronunciation_en, pronunciation_phonetic"""

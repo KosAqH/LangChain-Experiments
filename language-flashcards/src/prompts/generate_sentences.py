@@ -8,7 +8,6 @@ Category: {category}
 
 For each sentence, provide:
 - **category**: The category name
-- **type**: Always "sentence"
 - **front_en**: The English sentence
 - **back_foreign**: The foreign language translation
 - **pronunciation_en**: A simple English-approximation pronunciation guide
@@ -18,4 +17,4 @@ Prioritize practical, commonly used phrases and expressions.
 
 Return the result as a structured JSON object with fields:
 - "category": the category name
-- "flashcards": array of objects with fields: category, type, front_en, back_foreign, pronunciation_en, pronunciation_phonetic"""
+- "flashcards": array of objects with fields: category, front_en, back_foreign, pronunciation_en, pronunciation_phonetic"""
