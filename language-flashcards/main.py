@@ -1,3 +1,4 @@
+import logging
 import dotenv
 
 from langgraph.types import Send
@@ -9,6 +10,13 @@ from src.nodes.generate_flashcards import generate_flashcards
 from src.nodes.format_and_save import format_and_save
 from src.state import FlashcardState
 
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%H:%M:%S",
+)
+logger = logging.getLogger(__name__)
 
 dotenv.load_dotenv()
 
@@ -67,5 +75,6 @@ if __name__ == "__main__":
         sys.exit(1)
 
     user_prompt = " ".join(sys.argv[1:])
+    logger.info("Starting flashcard generation for: %s", user_prompt)
     result = run(user_prompt)
-    print(f"\nDone! Flashcards saved to: {result['output_file']}")
+    logger.info("Done! Flashcards saved to: %s", result["output_file"])

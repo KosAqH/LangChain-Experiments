@@ -2,8 +2,12 @@ import json
 import csv
 import os
 import re
+import logging
 from datetime import datetime
 from src.state import FlashcardState
+
+
+logger = logging.getLogger(__name__)
 
 
 def _sanitize_filename(text: str) -> str:
@@ -21,10 +25,12 @@ def format_and_save(state: FlashcardState) -> dict:
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_dir = os.path.join("output", f"{base}_{timestamp}")
     os.makedirs(output_dir, exist_ok=True)
+    logger.info("Saving %d flashcards to %s", len(flashcards), output_dir)
 
     json_path = os.path.join(output_dir, "flashcards.json")
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(flashcards, f, ensure_ascii=False, indent=2)
+    logger.info("Saved JSON: %s", json_path)
 
     csv_path = os.path.join(output_dir, "flashcards.csv")
     fieldnames = [
@@ -42,6 +48,7 @@ def format_and_save(state: FlashcardState) -> dict:
         writer.writeheader()
         for card in flashcards:
             writer.writerow({k: card.get(k, "") for k in fieldnames})
+    logger.info("Saved CSV: %s", csv_path)
 
     anki_path = os.path.join(output_dir, "anki_import.txt")
     with open(anki_path, "w", encoding="utf-8", newline="") as f:
@@ -58,5 +65,6 @@ def format_and_save(state: FlashcardState) -> dict:
                 ]
             )
             f.write(row + "\n")
+    logger.info("Saved Anki import: %s", anki_path)
 
     return {"output_file": output_dir}
