@@ -1,20 +1,12 @@
 import logging
 from typing import cast
-from dotenv import load_dotenv
-from langchain_openrouter import ChatOpenRouter
+from src.llm import model
 from src.models import CategoriesResponse
 from src.prompts.generate_categories import CATEGORIES_PROMPT
 from src.state import FlashcardState
 
 
 logger = logging.getLogger(__name__)
-
-load_dotenv()
-
-model = ChatOpenRouter(
-    model="openai/gpt-4o-mini",
-    temperature=0,
-)
 
 
 def generate_categories(state: FlashcardState) -> dict:
