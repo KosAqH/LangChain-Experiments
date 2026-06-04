@@ -12,6 +12,7 @@ language-flashcards:
     - nodes/
       - extract_language.py - parses user prompt for language, topic, card count.
       - generate_categories.py - generates relevant categories for topic.
+      - human_review_categories.py - interactive human review step: shows generated categories and allows add/remove before proceeding.
       - plan_distribution.py - plans per-category/per-type card limits if max_cards set.
       - generate_words.py - generates word flashcards per category (parallel via Send, respects limit).
       - generate_sentences.py - generates sentence flashcards per category (parallel via Send, respects limit).

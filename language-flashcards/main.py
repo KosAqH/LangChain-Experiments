@@ -8,6 +8,7 @@ from langgraph.graph import END, StateGraph, START
 
 from src.nodes.extract_language import extract_language
 from src.nodes.generate_categories import generate_categories
+from src.nodes.human_review_categories import human_review_categories
 from src.nodes.plan_distribution import plan_distribution
 from src.nodes.generate_words import generate_words
 from src.nodes.generate_sentences import generate_sentences
@@ -53,6 +54,7 @@ def _route_to_card_types(state: FlashcardState):
 builder = StateGraph(FlashcardState)
 builder.add_node("extract_language", extract_language)
 builder.add_node("generate_categories", generate_categories)
+builder.add_node("human_review_categories", human_review_categories)
 builder.add_node("plan_distribution", plan_distribution)
 builder.add_node("generate_words", generate_words)
 builder.add_node("generate_sentences", generate_sentences)
@@ -61,7 +63,8 @@ builder.add_node("format_and_save", format_and_save)
 
 builder.add_edge(START, "extract_language")
 builder.add_edge("extract_language", "generate_categories")
-builder.add_edge("generate_categories", "plan_distribution")
+builder.add_edge("generate_categories", "human_review_categories")
+builder.add_edge("human_review_categories", "plan_distribution")
 builder.add_conditional_edges(
     "plan_distribution", _route_to_card_types, ["generate_words", "generate_sentences", "generate_conversations"]
 )
