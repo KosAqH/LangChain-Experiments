@@ -1,11 +1,11 @@
-from typing import Optional, Literal
+from typing import Literal
 from pydantic import BaseModel
 
 
 class ExtractedPrompt(BaseModel):
     language: str
     topic: str
-    max_cards: Optional[int] = None
+    max_cards: int | None = None
 
 
 class CategoriesResponse(BaseModel):
@@ -19,8 +19,8 @@ class Flashcard(BaseModel):
     back_foreign: str
     pronunciation_en: str
     pronunciation_phonetic: str
-    example_en: Optional[str] = None
-    example_foreign: Optional[str] = None
+    example_en: str = ""
+    example_foreign: str = ""
 
 
 class CategoryFlashcards(BaseModel):
