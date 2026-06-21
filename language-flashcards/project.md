@@ -1,0 +1,27 @@
+language-flashcards:
+
+- agents.md - contains the code convention and project schema reference for the language flashcards project.
+- readme.md - contains the project description, installation instructions, and usage guide for the language flashcards project.
+- .env.example - contains an example of the environment variables needed for the project.
+- main.py - contains the main code for the language flashcards project, including the implementation of the flashcard generation and review process.
+- plan.md - contains the implementation plan for the language flashcards project.
+- output/ - generated flashcard JSON and CSV files.
+- src/
+    - state.py - TypedDict state definitions (FlashcardState, CategoryCardTypeState).
+    - models.py - Pydantic models for structured LLM output (FlashcardBase, DistributionPlan, etc.).
+    - nodes/
+      - extract_language.py - parses user prompt for language, topic, card count.
+      - generate_categories.py - generates relevant categories for topic.
+      - human_review_categories.py - interactive human review step: shows generated categories and allows add/remove before proceeding.
+      - plan_distribution.py - plans per-category/per-type card limits if max_cards set.
+      - generate_words.py - generates word flashcards per category (parallel via Send, respects limit).
+      - generate_sentences.py - generates sentence flashcards per category (parallel via Send, respects limit).
+      - generate_conversations.py - generates conversation flashcards per category (parallel via Send, respects limit).
+      - format_and_save.py - saves output as JSON, CSV, and Anki-import TXT.
+    - prompts/
+      - extract_language.py - LLM prompt template for language extraction.
+      - generate_categories.py - LLM prompt template for category generation.
+      - plan_distribution.py - LLM prompt template for intelligent card limit distribution.
+      - generate_words.py - LLM prompt template for word flashcard generation.
+      - generate_sentences.py - LLM prompt template for sentence flashcard generation.
+      - generate_conversations.py - LLM prompt template for conversation flashcard generation.
